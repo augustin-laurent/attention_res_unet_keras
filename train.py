@@ -9,7 +9,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import AdamW
 from tensorflow.data import Dataset
 
-from utils.loss_function import BCEDice, iou_coeff, dice_coeff
+from utils.loss_function import bce_dice_loss, iou_coeff, dice_coeff
 from model.attentionresunet import Attention_ResUNet
 
 logging.basicConfig(level=logging.INFO)
@@ -45,7 +45,7 @@ def train_model(model: Model, train_dataset: Dataset, valid_dataset: Dataset, sa
 
     model.summary()
 
-    model.compile(optimizer=AdamW(learning_rate), loss=BCEDice, metrics=[iou_coeff, dice_coeff])
+    model.compile(optimizer=AdamW(learning_rate), loss=bce_dice_loss, metrics=[iou_coeff, dice_coeff])
 
     callbacks = [
         ModelCheckpoint(f"{save_dir}/{model_name}.keras", save_best_only=True, monitor="val_loss"),
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     batch_size = 16
     height = 256
     width = 256
-    model = Attention_ResUNet(input_shape=(height, width, 3), class_number=1, dropout_rate=0.0, batch_norm=True)
+    model = Attention_ResUNet(input_shape=(height, width, 3), NUM_CLASSES=1, dropout_rate=0.0, batch_norm=True)
     (train_x, train_y), (valid_x, valid_y) = load_data_train(path_dataset)
     logging.info(f"Train: ({len(train_x)},{len(train_y)})")
     (test_x, test_y) = load_data_test(path_dataset)

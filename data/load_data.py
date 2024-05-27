@@ -1,12 +1,12 @@
-import tqdm
 import os
 import numpy as np
 import logging
 import cv2
 
 from glob import glob
+from tqdm import tqdm
 
-from augment import augment_data
+from .augment import augment_data
 
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
@@ -132,16 +132,17 @@ def create_dataset(images: list, masks: list, batch_size: int = 16, augment: boo
     Y = []
 
     for x, y in zip(images, masks):
-        X.append(read_img(x, resize=resize, normalize=normalize, size=size))
-        Y.append(read_mask(y, resize=resize, normalize=normalize, size=size))
+        img = read_img(x, resize=resize, normalize=normalize, size=size)
+        mask = read_mask(y, resize=resize, normalize=normalize, size=size)
+        if augment:
+            img_aug, mask_aug = augment_data(img, mask)
+            X.append(img_aug)
+            Y.append(mask_aug)
+        X.append(img)
+        Y.append(mask)
     
     X = np.array(X)
     Y = np.array(Y)
-
-    if augment:
-        X_aug, Y_aug = augment_data(X, Y)
-        X = np.concatenate([X, X_aug], axis=0)
-        Y = np.concatenate([Y, Y_aug], axis=0)
     
     dataset = Dataset.from_tensor_slices((X, Y))
     dataset = dataset.shuffle(buffer_size=1024)
