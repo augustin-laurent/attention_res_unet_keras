@@ -2,8 +2,19 @@ import numpy as np
 
 import albumentations as A
 
-def augment_data(image: np.ndarray, mask: np.ndarray):
+def augment_data(image: np.ndarray, mask: np.ndarray) -> tuple:
+    """
+    Augments the input image and mask using a variety of transformations.
 
+    The transformations include horizontal and vertical flips, elastic and perspective transformations, piecewise affine transformations, shift-scale-rotate transformations, grid and optical distortions, blur, rotation, and transpose. Each transformation is applied with a certain probability.
+
+    Parameters:
+    image (np.ndarray): The input image to be augmented.
+    mask (np.ndarray): The corresponding mask to be augmented.
+
+    Returns:
+    tuple: The augmented image and mask as a tuple.
+    """
     transform = A.Compose([
         A.HorizontalFlip(p=0.5),
         A.VerticalFlip(p=0.5),
