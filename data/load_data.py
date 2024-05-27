@@ -77,9 +77,9 @@ def load_data_train(path: str, num_slice_valid_set: int = 1, seed: int = SEED) -
     for fmt in tqdm(IMG_FORMAT, desc="Loading images for training and validation sets"):
         images.extend(sorted(glob(os.path.join(path, f"train/HE_cell/*.{fmt}"))))
         masks.extend(sorted(glob(os.path.join(path, f"train/ERG_cell/*.{fmt}"))))
-    logging.info(f"Found {len(images)} images and {len(masks)} masks")
+    logging.info(f"Found {len(images)} images and {len(masks)} masks for training and validation sets")
     
-    ids = [int(img.split('_')[0]) for img in images]
+    ids = [img.split('_')[0] for img in images]
     unique_ids = list(set(ids))
 
     np.random.seed(seed)
@@ -91,6 +91,9 @@ def load_data_train(path: str, num_slice_valid_set: int = 1, seed: int = SEED) -
     train_y = [mask for mask, id in zip(masks, ids) if id in train_ids]
     valid_x = [img for img, id in zip(images, ids) if id in valid_ids]
     valid_y = [mask for mask, id in zip(masks, ids) if id in valid_ids]
+
+    logging.info(f"Train: ({len(train_x)},{len(train_y)})")
+    logging.info(f"Valid: ({len(valid_x)},{len(valid_y)})")
 
     return (train_x, train_y), (valid_x, valid_y)
 
@@ -109,7 +112,7 @@ def load_data_test(path: str) -> tuple:
     for fmt in tqdm(IMG_FORMAT, desc="Loading images for test dataset"):
         images.extend(sorted(glob(os.path.join(path, f"eval/HE_eval/*.{fmt}"))))
         masks.extend(sorted(glob(os.path.join(path, f"eval/ERG_eval/*.{fmt}"))))
-    logging.info(f"Found {len(images)} images and {len(masks)} masks")
+    logging.info(f"Found {len(images)} images and {len(masks)} masks for testing")
     return images, masks
 
 def create_dataset(images: list, masks: list, batch_size: int = 16, augment: bool = True, resize: bool = True, normalize: bool = True, size: tuple = (256, 256)) -> Dataset:
