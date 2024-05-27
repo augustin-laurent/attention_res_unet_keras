@@ -24,6 +24,8 @@ def validate(model_path: str, x: np.ndarray, y: np.ndarray, custom_objects: dict
     model: tf.keras.Model: Model to validate
     x: np.ndarray: Input data
     y: np.ndarray: Target data
+    custom_objects: dict: Custom objects for loading the model
+    path_predictions: str: Path to save the predictions
     """
     try:
         model = load_model(model_path, custom_objects=custom_objects)
