@@ -11,6 +11,7 @@ from .augment import augment_data
 
 from tensorflow.data import Dataset
 from tensorflow.data.experimental import AUTOTUNE
+from tensorflow import TensorSpec, float32
 
 SEED = 88
 
@@ -118,6 +119,26 @@ def load_data_test(path: str) -> tuple:
     logging.info(f"Found {len(images)} images and {len(masks)} masks for testing")
     return images, masks
 
+def image_generator(images, masks, batch_size, augment, resize, normalize, size):
+    while True:
+        batch_paths = np.random.choice(a = len(images), size = batch_size)
+        batch_input = []
+        batch_output = [] 
+
+        for input_path, output_path in batch_paths:
+            input = read_img(input_path, resize=resize, normalize=normalize, size=size)
+            output = read_mask(output_path, resize=resize, normalize=normalize, size=size)
+
+            if augment:
+                input, output = augment_data(input, output)
+
+            batch_input += [ input ]
+            batch_output += [ output ]
+        batch_x = np.array( batch_input )
+        batch_y = np.array( batch_output )
+
+        yield( batch_x, batch_y )
+
 def create_dataset(images: list, masks: list, batch_size: int = 16, augment: bool = True, resize: bool = True, normalize: bool = True, size: tuple = (256, 256)) -> Dataset:
     """
     Creates a TensorFlow dataset from the given images and masks.
@@ -134,27 +155,7 @@ def create_dataset(images: list, masks: list, batch_size: int = 16, augment: boo
     Returns:
     Dataset: The TensorFlow dataset.
     """
-    X = []
-    Y = []
-
-    for x, y in tqdm(zip(images, masks), total=len(images)):
-        img = read_img(x, resize=resize, normalize=normalize, size=size)
-        mask = read_mask(y, resize=resize, normalize=normalize, size=size)
-        if augment:
-            img_aug, mask_aug = augment_data(img, mask)
-            X.append(img_aug)
-            Y.append(mask_aug)
-        X.append(img)
-        Y.append(mask)
-    
-    X = np.array(X)
-    Y = np.array(Y)
-    
-    dataset = Dataset.from_tensor_slices((X, Y))
-    dataset = dataset.shuffle(buffer_size=1024)
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(buffer_size=AUTOTUNE)
-
+    dataset = Dataset.from_generator(lambda: image_generator(images, masks, batch_size, augment, resize, normalize, size), output_signature=(TensorSpec(shape=(batch_size, *size, 3), dtype=float32),TensorSpec(shape=(batch_size, *size, 1), dtype=float32)))
     return dataset
 
 def create_dataset_parallel(images: list, masks: list, batch_size: int = 16, augment: bool = True, resize: bool = True, normalize: bool = True, size: tuple = (256, 256)) -> Dataset:
