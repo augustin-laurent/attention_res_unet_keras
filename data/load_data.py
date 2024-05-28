@@ -32,7 +32,7 @@ def read_img(path: str, resize: bool = False, normalize: bool = False, size: tup
     Returns:
     np.ndarray: The processed image as a numpy array.
     """
-    img = cv2.imread(path, cv2.IMREAD_COLOR)
+    img = cv2.imread(str(path), cv2.IMREAD_COLOR)
     if resize:
         img = cv2.resize(img, size, interpolation=cv2.INTER_CUBIC)
     if normalize:
@@ -53,7 +53,7 @@ def read_mask(path: str, resize: bool = False, normalize: bool = False, size: tu
     Returns:
     np.ndarray: The processed mask as a numpy array.
     """
-    mask = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    mask = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
     if resize:
         mask = cv2.resize(mask, size, interpolation=cv2.INTER_CUBIC)
     if normalize:
