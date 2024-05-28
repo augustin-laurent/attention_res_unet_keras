@@ -5,6 +5,7 @@ import cv2
 
 from glob import glob
 from tqdm import tqdm
+from joblib import Parallel, delayed
 
 from .augment import augment_data
 
@@ -136,7 +137,7 @@ def create_dataset(images: list, masks: list, batch_size: int = 16, augment: boo
     X = []
     Y = []
 
-    for x, y in zip(images, masks):
+    for x, y in tqdm(zip(images, masks), total=len(images)):
         img = read_img(x, resize=resize, normalize=normalize, size=size)
         mask = read_mask(y, resize=resize, normalize=normalize, size=size)
         if augment:
@@ -146,6 +147,58 @@ def create_dataset(images: list, masks: list, batch_size: int = 16, augment: boo
         X.append(img)
         Y.append(mask)
     
+    X = np.array(X)
+    Y = np.array(Y)
+    
+    dataset = Dataset.from_tensor_slices((X, Y))
+    dataset = dataset.shuffle(buffer_size=1024)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(buffer_size=AUTOTUNE)
+
+    return dataset
+
+def create_dataset_parallel(images: list, masks: list, batch_size: int = 16, augment: bool = True, resize: bool = True, normalize: bool = True, size: tuple = (256, 256)) -> Dataset:
+    """
+    Creates a TensorFlow dataset from the given images and masks.
+
+    Parameters:
+    images (list): A list of paths to the images.
+    masks (list): A list of paths to the masks.
+    batch_size (int, optional): The batch size for the dataset. Defaults to 16.
+    augment (bool, optional): If True, the dataset is augmented. Defaults to False.
+    resize (bool, optional): If True, the images and masks are resized. Defaults to True.
+    normalize (bool, optional): If True, the images and masks are normalized. Defaults to True.
+    size (tuple, optional): The desired size of the images and masks after resizing. Defaults to (256, 256).
+
+    Returns:
+    Dataset: The TensorFlow dataset.
+    """
+    X = []
+    Y = []
+
+    def load_and_preprocess(x, y, augment):
+        img = read_img(x, resize=resize, normalize=normalize, size=size)
+        mask = read_mask(y, resize=resize, normalize=normalize, size=size)
+        if augment:
+            img_aug, mask_aug = augment_data(img, mask)
+            return img, mask, img_aug, mask_aug
+        else:
+            return img, mask
+    
+    results = Parallel(n_jobs=-1)(delayed(load_and_preprocess)(x, y, augment) for x, y in zip(images, masks))
+
+    if augment:
+        for img, mask, img_aug, mask_aug in tqdm(results, total=len(images)):
+            X.append(img_aug)
+            X.append(img)
+            Y.append(mask_aug)
+            Y.append(mask)
+    
+    else:
+        for img, mask in tqdm(results, total=len(images)):
+            X.append(img)
+            Y.append(mask)
+
     X = np.array(X)
     Y = np.array(Y)
     
