@@ -64,7 +64,7 @@ def train_model(model: Model, train_dataset: Dataset, valid_dataset: Dataset, sa
     logging.info("Model training completed")
 
 if __name__ == "__main__":
-    path_dataset = "/mnt/d/CRCT"
+    path_dataset = "/users/m2ida/m2ida/dataset_segm/"
     save_dir = "files"
     csv_dir = "files_log"
     epoch = 50
