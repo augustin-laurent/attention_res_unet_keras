@@ -119,7 +119,7 @@ def load_data_test(path: str) -> tuple:
     logging.info(f"Found {len(images)} images and {len(masks)} masks for testing")
     return images, masks
 
-def generator(images, masks, augment, resize, normalize, size):
+def generator(images, masks, augment, resize, normalize, size: tuple = (256, 256)):
     for x, y in zip(images, masks):
         img = read_img(x, resize=resize, normalize=normalize, size=size)
         mask = read_mask(y, resize=resize, normalize=normalize, size=size)
