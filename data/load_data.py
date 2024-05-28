@@ -80,7 +80,7 @@ def load_data_train(path: str, num_slice_valid_set: int = 1, seed: int = SEED) -
         masks.extend(sorted(glob(os.path.join(path, f"train/ERG_cell/*.{fmt}"))))
     logging.info(f"Found {len(images)} images and {len(masks)} masks for training and validation sets")
     
-    ids = [img.split('_')[1].split('/')[1] for img in images]
+    ids = [img.split('_')[2].split('/')[1] for img in images] # Osirim [2] [1]
     unique_ids = list(set(ids))
 
     logging.info(f"Found {len(unique_ids)} unique ids")
