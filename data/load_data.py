@@ -156,6 +156,8 @@ def create_dataset(images: list, masks: list, batch_size: int = 16, augment: boo
     dataset = dataset.batch(batch_size)
     dataset = dataset.prefetch(buffer_size=AUTOTUNE)
 
+    return dataset
+
 def create_dataset_parallel(images: list, masks: list, batch_size: int = 16, augment: bool = True, resize: bool = True, normalize: bool = True, size: tuple = (256, 256)) -> Dataset:
     """
     Creates a TensorFlow dataset from the given images and masks.
